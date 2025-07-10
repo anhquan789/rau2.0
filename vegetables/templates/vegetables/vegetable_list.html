@@ -1,0 +1,206 @@
+{% extends 'vegetables/base.html' %}
+{% load static %}
+
+{% block title %}
+{% if current_category %}{{ current_category }} - {% endif %}
+{% if search_query %}Tìm kiếm: {{ search_query }} - {% endif %}
+Sản phẩm
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'vegetables:home' %}">Trang chủ</a></li>
+            <li class="breadcrumb-item active">Sản phẩm</li>
+        </ol>
+    </nav>
+    
+    <!-- Page header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2">
+                {% if current_category %}
+                    <i class="fas fa-tag"></i> {{ current_category|title }}
+                {% elif search_query %}
+                    <i class="fas fa-search"></i> Kết quả tìm kiếm: "{{ search_query }}"
+                {% else %}
+                    <i class="fas fa-shopping-basket"></i> Tất cả sản phẩm
+                {% endif %}
+            </h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Sidebar with categories -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Danh mục</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'vegetables:vegetable_list' %}" 
+                       class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                        Tất cả sản phẩm
+                    </a>
+                    {% for category in categories %}
+                    <a href="{% url 'vegetables:category_detail' category.slug %}" 
+                       class="list-group-item list-group-item-action {% if current_category == category.slug %}active{% endif %}">
+                        {{ category.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-lg-9">
+            <!-- Search and filter bar -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <form method="GET" class="d-flex">
+                        {% if current_category %}
+                        <input type="hidden" name="category" value="{{ current_category }}">
+                        {% endif %}
+                        <input type="text" class="form-control me-2" name="q" 
+                               placeholder="Tìm kiếm sản phẩm..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="text-muted">{{ vegetables|length }} sản phẩm</span>
+                </div>
+            </div>
+            
+            <!-- Products grid -->
+            {% if vegetables %}
+            <div class="row g-4">
+                {% for vegetable in vegetables %}
+                <div class="col-6 col-md-4 col-xl-3">
+                    <div class="card h-100">
+                        {% if vegetable.image %}
+                        <img src="{{ vegetable.image.url }}" class="card-img-top" 
+                             style="height: 200px; object-fit: cover;" alt="{{ vegetable.name }}">
+                        {% else %}
+                        <div class="card-img-top d-flex align-items-center justify-content-center" 
+                             style="height: 200px; background-color: var(--light-color);">
+                            <i class="fas fa-leaf fa-3x text-success"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Featured badge -->
+                        {% if vegetable.is_featured %}
+                        <span class="position-absolute top-0 end-0 badge bg-warning m-2">
+                            <i class="fas fa-star"></i> Nổi bật
+                        </span>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">{{ vegetable.name }}</h6>
+                            <p class="card-text text-muted small flex-grow-1">
+                                {{ vegetable.description|truncatewords:8 }}
+                            </p>
+                            
+                            <!-- Origin and stock info -->
+                            <div class="mb-2">
+                                {% if vegetable.origin %}
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt"></i> {{ vegetable.origin }}
+                                </small><br>
+                                {% endif %}
+                                <small class="text-muted">
+                                    <i class="fas fa-box"></i> Còn {{ vegetable.stock_quantity }} {{ vegetable.get_unit_display }}
+                                </small>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="price-tag">{{ vegetable.price|floatformat:0 }}đ</span>
+                                    <small class="text-muted">/{{ vegetable.get_unit_display }}</small>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'vegetables:vegetable_detail' vegetable.slug %}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i> Xem chi tiết
+                                    </a>
+                                    {% if vegetable.stock_quantity > 0 %}
+                                    <form method="post" action="{% url 'vegetables:add_to_cart' vegetable.id %}" 
+                                          class="add-to-cart-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                                            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <button class="btn btn-secondary btn-sm w-100" disabled>
+                                        <i class="fas fa-times"></i> Hết hàng
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- No products found -->
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4>Không tìm thấy sản phẩm nào</h4>
+                <p class="text-muted">
+                    {% if search_query %}
+                        Không có sản phẩm nào khớp với từ khóa "{{ search_query }}"
+                    {% else %}
+                        Danh mục này chưa có sản phẩm nào.
+                    {% endif %}
+                </p>
+                <a href="{% url 'vegetables:vegetable_list' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Xem tất cả sản phẩm
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle add to cart forms
+    const addToCartForms = document.querySelectorAll('.add-to-cart-form');
+    addToCartForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('cart-count').textContent = data.cart_total_items;
+                    showToast(data.message, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'danger');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

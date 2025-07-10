@@ -1,0 +1,218 @@
+{% extends 'vegetables/base.html' %}
+{% load static %}
+
+{% block title %}{{ vegetable.name }} - Chi tiết sản phẩm{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'vegetables:home' %}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'vegetables:vegetable_list' %}">Sản phẩm</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'vegetables:category_detail' vegetable.category.slug %}">{{ vegetable.category.name }}</a></li>
+            <li class="breadcrumb-item active">{{ vegetable.name }}</li>
+        </ol>
+    </nav>
+    
+    <!-- Product detail -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <!-- Product image -->
+            {% if vegetable.image %}
+            <img src="{{ vegetable.image.url }}" class="img-fluid rounded" alt="{{ vegetable.name }}"
+                 style="width: 100%; max-height: 500px; object-fit: cover;">
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center rounded" 
+                 style="width: 100%; height: 400px; background-color: var(--light-color);">
+                <i class="fas fa-leaf fa-5x text-success"></i>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-6">
+            <!-- Product info -->
+            <div class="mb-3">
+                {% if vegetable.is_featured %}
+                <span class="badge bg-warning mb-2">
+                    <i class="fas fa-star"></i> Sản phẩm nổi bật
+                </span>
+                {% endif %}
+                <h1 class="h2">{{ vegetable.name }}</h1>
+                <p class="text-muted">
+                    <i class="fas fa-tag"></i> {{ vegetable.category.name }}
+                </p>
+            </div>
+            
+            <!-- Price -->
+            <div class="mb-4">
+                <span class="price-tag h3">{{ vegetable.price|floatformat:0 }}đ</span>
+                <span class="text-muted">/ {{ vegetable.get_unit_display }}</span>
+            </div>
+            
+            <!-- Product details -->
+            <div class="row mb-4">
+                {% if vegetable.origin %}
+                <div class="col-6">
+                    <strong><i class="fas fa-map-marker-alt"></i> Xuất xứ:</strong><br>
+                    <span class="text-muted">{{ vegetable.origin }}</span>
+                </div>
+                {% endif %}
+                <div class="col-6">
+                    <strong><i class="fas fa-box"></i> Tồn kho:</strong><br>
+                    <span class="text-muted">{{ vegetable.stock_quantity }} {{ vegetable.get_unit_display }}</span>
+                </div>
+            </div>
+            
+            <!-- Add to cart form -->
+            {% if vegetable.stock_quantity > 0 %}
+            <form method="post" action="{% url 'vegetables:add_to_cart' vegetable.id %}" id="add-to-cart-form">
+                {% csrf_token %}
+                <div class="row mb-3">
+                    <div class="col-4">
+                        <label for="quantity" class="form-label">Số lượng:</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" 
+                               min="1" max="{{ vegetable.stock_quantity }}" value="1">
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> Sản phẩm này hiện đã hết hàng.
+            </div>
+            {% endif %}
+            
+            <!-- Share buttons -->
+            <div class="mt-4">
+                <h6>Chia sẻ:</h6>
+                <a href="#" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="fab fa-facebook-f"></i> Facebook
+                </a>
+                <a href="#" class="btn btn-outline-info btn-sm me-2">
+                    <i class="fab fa-twitter"></i> Twitter
+                </a>
+                <a href="#" class="btn btn-outline-success btn-sm">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product description -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="productTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="description-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#description" type="button" role="tab">
+                                <i class="fas fa-info-circle"></i> Mô tả
+                            </button>
+                        </li>
+                        {% if vegetable.nutritional_info %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="nutrition-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#nutrition" type="button" role="tab">
+                                <i class="fas fa-apple-alt"></i> Dinh dưỡng
+                            </button>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="productTabsContent">
+                        <div class="tab-pane fade show active" id="description" role="tabpanel">
+                            <p>{{ vegetable.description|linebreaks }}</p>
+                        </div>
+                        {% if vegetable.nutritional_info %}
+                        <div class="tab-pane fade" id="nutrition" role="tabpanel">
+                            <p>{{ vegetable.nutritional_info|linebreaks }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Related products -->
+    {% if related_vegetables %}
+    <div class="mt-5">
+        <h3><i class="fas fa-heart"></i> Sản phẩm tương tự</h3>
+        <div class="row g-4">
+            {% for related in related_vegetables %}
+            <div class="col-6 col-md-3">
+                <div class="card h-100">
+                    {% if related.image %}
+                    <img src="{{ related.image.url }}" class="card-img-top" 
+                         style="height: 200px; object-fit: cover;" alt="{{ related.name }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center" 
+                         style="height: 200px; background-color: var(--light-color);">
+                        <i class="fas fa-leaf fa-3x text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ related.name }}</h6>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="price-tag">{{ related.price|floatformat:0 }}đ</span>
+                                <small class="text-muted">/{{ related.get_unit_display }}</small>
+                            </div>
+                            <a href="{% url 'vegetables:vegetable_detail' related.slug %}" 
+                               class="btn btn-outline-primary btn-sm w-100">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle add to cart form
+    const addToCartForm = document.getElementById('add-to-cart-form');
+    if (addToCartForm) {
+        addToCartForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(addToCartForm);
+            
+            fetch(addToCartForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('cart-count').textContent = data.cart_total_items;
+                    showToast(data.message, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'danger');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

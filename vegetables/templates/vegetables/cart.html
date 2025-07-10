@@ -1,0 +1,283 @@
+{% extends 'vegetables/base.html' %}
+{% load static %}
+
+{% block title %}Giỏ hàng{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'vegetables:home' %}">Trang chủ</a></li>
+            <li class="breadcrumb-item active">Giỏ hàng</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h2 mb-4">
+                <i class="fas fa-shopping-cart"></i> Giỏ hàng của bạn
+            </h1>
+            
+            {% if cart.items.exists %}
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Cart items -->
+                    <div class="card">
+                        <div class="card-body">
+                            {% for item in cart.items.all %}
+                            <div class="row cart-item border-bottom py-3" data-item-id="{{ item.id }}">
+                                <div class="col-3 col-md-2">
+                                    {% if item.vegetable.image %}
+                                    <img src="{{ item.vegetable.image.url }}" class="img-fluid rounded" 
+                                         alt="{{ item.vegetable.name }}" style="height: 80px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                         style="height: 80px;">
+                                        <i class="fas fa-leaf text-success"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-9 col-md-10">
+                                    <div class="row">
+                                        <div class="col-12 col-md-6">
+                                            <h6 class="mb-1">
+                                                <a href="{% url 'vegetables:vegetable_detail' item.vegetable.slug %}" 
+                                                   class="text-decoration-none">
+                                                    {{ item.vegetable.name }}
+                                                </a>
+                                            </h6>
+                                            <small class="text-muted">{{ item.vegetable.category.name }}</small><br>
+                                            <small class="text-muted">{{ item.vegetable.price|floatformat:0 }}đ / {{ item.vegetable.get_unit_display }}</small>
+                                        </div>
+                                        
+                                        <div class="col-6 col-md-3">
+                                            <div class="input-group input-group-sm">
+                                                <button class="btn btn-outline-secondary decrease-qty" type="button" 
+                                                        data-item-id="{{ item.id }}">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                                <input type="number" class="form-control text-center quantity-input" 
+                                                       value="{{ item.quantity }}" min="1" max="{{ item.vegetable.stock_quantity }}"
+                                                       data-item-id="{{ item.id }}">
+                                                <button class="btn btn-outline-secondary increase-qty" type="button" 
+                                                        data-item-id="{{ item.id }}">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-3 col-md-2 text-end">
+                                            <strong class="item-total">{{ item.get_cost|floatformat:0 }}đ</strong>
+                                        </div>
+                                        
+                                        <div class="col-3 col-md-1 text-end">
+                                            <button class="btn btn-outline-danger btn-sm remove-item" 
+                                                    data-item-id="{{ item.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Continue shopping -->
+                    <div class="mt-3">
+                        <a href="{% url 'vegetables:vegetable_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left"></i> Tiếp tục mua sắm
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- Order summary -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-receipt"></i> Tổng kết đơn hàng</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tổng số lượng:</span>
+                                <span id="total-items">{{ cart.get_total_items }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Tạm tính:</span>
+                                <span id="subtotal">{{ cart.get_total_price|floatformat:0 }}đ</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-3">
+                                <strong>Tổng cộng:</strong>
+                                <strong id="total-price" class="text-primary">{{ cart.get_total_price|floatformat:0 }}đ</strong>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <a href="{% url 'vegetables:checkout' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-credit-card"></i> Thanh toán
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Delivery info -->
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            <h6><i class="fas fa-truck"></i> Thông tin giao hàng</h6>
+                            <ul class="list-unstyled small mb-0">
+                                <li><i class="fas fa-check text-success"></i> Giao hàng miễn phí đơn từ 200.000đ</li>
+                                <li><i class="fas fa-check text-success"></i> Giao hàng trong ngày tại nội thành</li>
+                                <li><i class="fas fa-check text-success"></i> Thanh toán khi nhận hàng</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Empty cart -->
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
+                <h3>Giỏ hàng của bạn đang trống</h3>
+                <p class="text-muted mb-4">Thêm sản phẩm vào giỏ hàng để bắt đầu mua sắm</p>
+                <a href="{% url 'vegetables:vegetable_list' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-shopping-basket"></i> Bắt đầu mua sắm
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update quantity buttons
+    const decreaseButtons = document.querySelectorAll('.decrease-qty');
+    const increaseButtons = document.querySelectorAll('.increase-qty');
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+    const removeButtons = document.querySelectorAll('.remove-item');
+    
+    // Decrease quantity
+    decreaseButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            const input = document.querySelector(`input[data-item-id="${itemId}"]`);
+            let quantity = parseInt(input.value);
+            if (quantity > 1) {
+                quantity--;
+                input.value = quantity;
+                updateCartItem(itemId, quantity);
+            }
+        });
+    });
+    
+    // Increase quantity
+    increaseButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            const input = document.querySelector(`input[data-item-id="${itemId}"]`);
+            let quantity = parseInt(input.value);
+            const max = parseInt(input.max);
+            if (quantity < max) {
+                quantity++;
+                input.value = quantity;
+                updateCartItem(itemId, quantity);
+            }
+        });
+    });
+    
+    // Direct quantity input
+    quantityInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const itemId = this.dataset.itemId;
+            const quantity = parseInt(this.value);
+            const max = parseInt(this.max);
+            
+            if (quantity >= 1 && quantity <= max) {
+                updateCartItem(itemId, quantity);
+            } else {
+                this.value = Math.min(Math.max(quantity, 1), max);
+            }
+        });
+    });
+    
+    // Remove item
+    removeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                removeCartItem(itemId);
+            }
+        });
+    });
+    
+    function updateCartItem(itemId, quantity) {
+        fetch(`/update-cart-item/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `quantity=${quantity}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateCartDisplay(data);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'danger');
+        });
+    }
+    
+    function removeCartItem(itemId) {
+        fetch(`/remove-from-cart/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the item from DOM
+                const itemElement = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
+                if (itemElement) {
+                    itemElement.remove();
+                }
+                
+                updateCartDisplay(data);
+                
+                // Check if cart is empty
+                if (data.cart_total_items === 0) {
+                    location.reload();
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'danger');
+        });
+    }
+    
+    function updateCartDisplay(data) {
+        document.getElementById('cart-count').textContent = data.cart_total_items;
+        document.getElementById('total-items').textContent = data.cart_total_items;
+        document.getElementById('subtotal').textContent = formatPrice(data.cart_total_price);
+        document.getElementById('total-price').textContent = formatPrice(data.cart_total_price);
+    }
+    
+    function formatPrice(price) {
+        return Math.round(price).toLocaleString('vi-VN') + 'đ';
+    }
+});
+</script>
+{% endblock %}

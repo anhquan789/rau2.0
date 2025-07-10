@@ -1,0 +1,242 @@
+{% extends 'vegetables/base.html' %}
+{% load static %}
+
+{% block title %}Trang chủ - Cửa hàng rau sạch{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="fas fa-leaf"></i> Rau Sạch Tươi Ngon
+                </h1>
+                <p class="lead mb-4">
+                    Cung cấp rau củ tươi ngon, sạch, an toàn cho sức khỏe gia đình bạn. 
+                    Giao hàng tận nơi, nhanh chóng và tiện lợi.
+                </p>
+                <a href="{% url 'vegetables:vegetable_list' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-shopping-basket"></i> Mua sắm ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">
+            <i class="fas fa-th-large"></i> Danh mục sản phẩm
+        </h2>
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-6 col-md-3">
+                <a href="{% url 'vegetables:category_detail' category.slug %}" class="category-card">
+                    <div class="card h-100 text-center">
+                        {% if category.image %}
+                        <img src="{{ category.image.url }}" class="card-img-top" 
+                             style="height: 150px; object-fit: cover;" alt="{{ category.name }}">
+                        {% else %}
+                        <div class="card-img-top d-flex align-items-center justify-content-center" 
+                             style="height: 150px; background-color: var(--light-color);">
+                            <i class="fas fa-seedling fa-3x text-success"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h6 class="card-title">{{ category.name }}</h6>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">Chưa có danh mục nào.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+{% if featured_vegetables %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">
+            <i class="fas fa-star"></i> Sản phẩm nổi bật
+        </h2>
+        <div class="row g-4">
+            {% for vegetable in featured_vegetables %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="card h-100">
+                    {% if vegetable.image %}
+                    <img src="{{ vegetable.image.url }}" class="card-img-top" 
+                         style="height: 200px; object-fit: cover;" alt="{{ vegetable.name }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center" 
+                         style="height: 200px; background-color: var(--light-color);">
+                        <i class="fas fa-leaf fa-3x text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ vegetable.name }}</h6>
+                        <p class="card-text text-muted small flex-grow-1">
+                            {{ vegetable.description|truncatewords:10 }}
+                        </p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="price-tag">{{ vegetable.price|floatformat:0 }}đ</span>
+                                <small class="text-muted">/{{ vegetable.get_unit_display }}</small>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'vegetables:vegetable_detail' vegetable.slug %}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    Xem chi tiết
+                                </a>
+                                <form method="post" action="{% url 'vegetables:add_to_cart' vegetable.id %}" 
+                                      class="add-to-cart-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                                        <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'vegetables:vegetable_list' %}" class="btn btn-primary">
+                Xem tất cả sản phẩm <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Latest Products Section -->
+{% if latest_vegetables %}
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">
+            <i class="fas fa-clock"></i> Sản phẩm mới nhất
+        </h2>
+        <div class="row g-4">
+            {% for vegetable in latest_vegetables %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="card h-100">
+                    {% if vegetable.image %}
+                    <img src="{{ vegetable.image.url }}" class="card-img-top" 
+                         style="height: 200px; object-fit: cover;" alt="{{ vegetable.name }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center" 
+                         style="height: 200px; background-color: var(--light-color);">
+                        <i class="fas fa-leaf fa-3x text-success"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ vegetable.name }}</h6>
+                        <p class="card-text text-muted small flex-grow-1">
+                            {{ vegetable.description|truncatewords:10 }}
+                        </p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="price-tag">{{ vegetable.price|floatformat:0 }}đ</span>
+                                <small class="text-muted">/{{ vegetable.get_unit_display }}</small>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'vegetables:vegetable_detail' vegetable.slug %}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    Xem chi tiết
+                                </a>
+                                <form method="post" action="{% url 'vegetables:add_to_cart' vegetable.id %}" 
+                                      class="add-to-cart-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                                        <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-truck fa-3x text-success"></i>
+                </div>
+                <h5>Giao hàng nhanh</h5>
+                <p class="text-muted">Giao hàng trong ngày tại khu vực nội thành</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-shield-alt fa-3x text-success"></i>
+                </div>
+                <h5>Sản phẩm sạch</h5>
+                <p class="text-muted">Cam kết 100% rau củ sạch, không thuốc trừ sâu</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-headset fa-3x text-success"></i>
+                </div>
+                <h5>Hỗ trợ 24/7</h5>
+                <p class="text-muted">Đội ngũ hỗ trợ khách hàng tận tình</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle add to cart forms
+    const addToCartForms = document.querySelectorAll('.add-to-cart-form');
+    addToCartForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const vegetableId = form.action.split('/').slice(-2, -1)[0];
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('cart-count').textContent = data.cart_total_items;
+                    showToast(data.message, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'danger');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
