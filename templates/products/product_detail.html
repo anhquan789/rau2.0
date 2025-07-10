@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Cửa hàng Rau sạch{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'products:home' %}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'products:product_list' %}">Sản phẩm</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'products:category_detail' product.category.id %}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6 mb-4">
+            <div class="product-image-container">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="img-fluid rounded shadow" alt="{{ product.name }}" style="width: 100%; max-height: 400px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light rounded shadow d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="fas fa-image fa-5x text-muted"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-md-6">
+            <div class="product-info">
+                {% if product.is_featured %}
+                <span class="badge bg-warning text-dark mb-2">
+                    <i class="fas fa-star"></i> Sản phẩm nổi bật
+                </span>
+                {% endif %}
+                
+                <h1 class="h2 mb-3">{{ product.name }}</h1>
+                
+                <div class="price-section mb-4">
+                    <h3 class="text-success fw-bold">{{ product.get_price_display }}</h3>
+                </div>
+                
+                <div class="product-details mb-4">
+                    <p><strong>Danh mục:</strong> 
+                        <a href="{% url 'products:category_detail' product.category.id %}" class="text-success text-decoration-none">
+                            {{ product.category.name }}
+                        </a>
+                    </p>
+                    <p><strong>Đơn vị:</strong> {{ product.unit }}</p>
+                    {% if product.stock > 0 %}
+                        <p><strong>Tình trạng:</strong> 
+                            <span class="text-success"><i class="fas fa-check-circle me-1"></i>Còn hàng ({{ product.stock }} {{ product.unit }})</span>
+                        </p>
+                    {% else %}
+                        <p><strong>Tình trạng:</strong> 
+                            <span class="text-danger"><i class="fas fa-times-circle me-1"></i>Hết hàng</span>
+                        </p>
+                    {% endif %}
+                </div>
+                
+                <div class="description mb-4">
+                    <h5>Mô tả sản phẩm</h5>
+                    <p class="text-muted">{{ product.description }}</p>
+                </div>
+                
+                {% if product.stock > 0 %}
+                <div class="add-to-cart-section">
+                    <form method="post" action="{% url 'cart:add_to_cart' product.id %}" class="add-to-cart-form">
+                        {% csrf_token %}
+                        <div class="row g-3 align-items-end">
+                            <div class="col-4">
+                                <label for="quantity" class="form-label">Số lượng</label>
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="decreaseQuantity()">-</button>
+                                    <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ product.stock }}" 
+                                           class="form-control text-center">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="increaseQuantity()">+</button>
+                                </div>
+                            </div>
+                            <div class="col-8">
+                                <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ hàng
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Sản phẩm này hiện đã hết hàng.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <section class="mt-5">
+        <h3 class="mb-4">Sản phẩm cùng danh mục</h3>
+        <div class="row">
+            {% for product in related_products %}
+            <div class="col-6 col-md-3 mb-4">
+                <div class="card h-100 shadow-sm product-card">
+                    <a href="{% url 'products:product_detail' product.id %}" class="text-decoration-none">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 150px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                <i class="fas fa-image fa-2x text-muted"></i>
+                            </div>
+                        {% endif %}
+                    </a>
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-dark mb-1" style="font-size: 0.9rem;">{{ product.name }}</h6>
+                        <p class="card-text text-success fw-bold mb-2" style="font-size: 0.8rem;">{{ product.get_price_display }}</p>
+                        {% if product.stock > 0 %}
+                            <form method="post" action="{% url 'cart:add_to_cart' product.id %}" class="add-to-cart-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class="fas fa-cart-plus me-1"></i>Thêm
+                                </button>
+                            </form>
+                        {% else %}
+                            <button class="btn btn-secondary btn-sm w-100" disabled>Hết hàng</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<script>
+function increaseQuantity() {
+    var quantityInput = document.getElementById('quantity');
+    var currentValue = parseInt(quantityInput.value);
+    var maxValue = parseInt(quantityInput.max);
+    if (currentValue < maxValue) {
+        quantityInput.value = currentValue + 1;
+    }
+}
+
+function decreaseQuantity() {
+    var quantityInput = document.getElementById('quantity');
+    var currentValue = parseInt(quantityInput.value);
+    if (currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+    }
+}
+</script>
+{% endblock %}
